@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: spring-boot-api
+  namespace: argocd
+spec:
+  description: Project for Spring Boot API GitOps deployment
+  sourceRepos:
+    - https://github.com/Company-Engineering/spring-boot-api-chart.git
+    - https://github.com/Company-Engineering/spring-boot-api-gitops.git
+  destinations:
+    - namespace: spring-boot-api-dev
+      server: https://192.168.58.2:8443
+    - namespace: spring-boot-api-prd
+      server: https://192.168.67.2:8443
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

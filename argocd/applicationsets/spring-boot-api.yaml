@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: spring-boot-api
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            clusterName: dev-global-cluster-0
+            namespace: spring-boot-api-dev
+            chartRevision: main
+          - environment: prd
+            clusterName: prd-global-cluster-5
+            namespace: spring-boot-api-prd
+            chartRevision: v0.1.0
+  template:
+    metadata:
+      name: '{{environment}}-spring-boot-api'
+      labels:
+        app.kubernetes.io/name: spring-boot-api
+        app.kubernetes.io/part-of: spring-boot-api
+        app.kubernetes.io/environment: '{{environment}}'
+        company.io/cluster-name: '{{clusterName}}'
+    spec:
+      project: spring-boot-api
+      sources:
+        - repoURL: https://github.com/Company-Engineering/spring-boot-api-chart.git
+          targetRevision: '{{chartRevision}}'
+          path: helm
+          helm:
+            valueFiles:
+              - $values/environments/{{environment}}/values.yaml
+        - repoURL: https://github.com/Company-Engineering/spring-boot-api-gitops.git
+          targetRevision: main
+          ref: values
+      destination:
+        name: '{{clusterName}}'
+        namespace: '{{namespace}}'
+      ignoreDifferences:
+        - group: ""
+          kind: Secret
+          jsonPointers:
+            - /data/APP_USERNAME
+            - /data/APP_PASSWORD
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
